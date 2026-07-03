@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebInspector — Анализатор сайтов</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-theme="light">
+
+    <!-- Шапка -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="#" class="logo" title="WebInspector">
+                <img src="ico.png" alt="Логотип компании" class="logo-icon">
+                <span class="logo-text">WebInspector</span>
+            </a>
+            <div class="header-actions">
+                <button class="btn-icon" id="btnTheme" title="Переключить тему" aria-label="Переключить тему">🌙</button>
+                <button class="btn-icon" id="btnPrint" title="Экспорт в PDF / Печать" aria-label="Печать отчёта">🖨️</button>
+                <button class="btn-icon" id="btnCopy" title="Копировать отчёт" aria-label="Копировать отчёт">📋</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной макет: боковая панель + контент -->
+    <div class="layout-wrapper">
+        <!-- Боковая панель с историей -->
+        <aside class="sidebar" id="sidebar">
+            <section class="history-section" id="historySection">
+                <div class="history-header">
+                    <span>📜 История проверок</span>
+                    <div class="history-actions">
+                        <button class="btn-archive" id="btnArchive">📦 Архивировать все</button>
+                        <button class="btn-clear" id="btnClearHistory">🗑️ Очистить</button>
+                    </div>
+                </div>
+                <ul class="history-list" id="historyList">
+                    <li class="history-empty">История пока пуста. Проведите первый анализ!</li>
+                </ul>
+            </section>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="content">
+            <!-- Поле ввода URL -->
+            <section class="hero">
+                <h1 class="hero-title">Анализатор сайтов</h1>
+                <p class="hero-subtitle">Введите URL для проверки SEO, безопасности и производительности</p>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <span class="icon-left">🌐</span>
+                        <input type="text" class="url-input" id="urlInput"
+                               placeholder="example.com или https://example.com"
+                               autocomplete="url" spellcheck="false">
+                    </div>
+                    <button class="btn-analyze" id="btnAnalyze">
+                        <span class="btn-text">🔎 Анализировать</span>
+                        <span class="spinner-inline"></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Приветствие (скрывается после анализа) -->
+            <div class="welcome-block" id="welcomeBlock">
+                <div class="welcome-icon">📋</div>
+                <p class="welcome-title">Здесь появится отчёт</p>
+                <p>Введите URL сайта и нажмите «Анализировать», чтобы увидеть результаты проверки.</p>
+            </div>
+
+            <!-- Контейнер результатов -->
+            <div class="results-container" id="resultsContainer">
+                <!-- Предпросмотр сайта через iframe -->
+                <div class="iframe-section" id="iframeSection">
+                    <div class="iframe-header">
+                        <span>👁️ Предпросмотр сайта</span>
+                        <span class="iframe-url-display" id="iframeUrlDisplay"></span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <div class="iframe-placeholder" id="iframePlaceholder">Загрузка предпросмотра…</div>
+                        <iframe id="previewIframe"
+                                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                                loading="lazy" title="Предпросмотр сайта"
+                                referrerpolicy="no-referrer"></iframe>
+                        <div class="iframe-overlay"></div>
+                    </div>
+                </div>
+
+                <!-- Сводка (чипсы с количеством ошибок/предупреждений) -->
+                <div class="report-summary" id="reportSummary"></div>
+
+                <!-- Карточки отчёта -->
+                <div class="cards-grid" id="cardsGrid"></div>
+            </div>
+
+            <!-- Блок FAQ — навигатор по приложению -->
+<section class="faq-section" id="faqSection">
+    <h2 class="faq-title">📖 Как пользоваться WebInspector</h2>
+    <div class="faq-list">
+        <div class="faq-item">
+            <button class="faq-question">
+                🔍 Как запустить анализ сайта?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Введите URL в поле ввода (например, <code>example.com</code> или полный адрес) и нажмите кнопку «Анализировать». 
+                Приложение автоматически добавит <code>https://</code>, если вы его не указали, и начнёт сбор данных.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                📊 Что означают карточки в отчёте?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Каждая карточка подсвечивается своим цветом:
+                <ul style="padding-left: 18px; margin: 8px 0;">
+                    <li><span style="color:var(--critical);">❌ Ошибки (красный)</span> — серьёзные проблемы, требующие исправления.</li>
+                    <li><span style="color:var(--warning);">⚠️ Предупреждения (жёлтый)</span> — рекомендации, которые желательно выполнить.</li>
+                    <li><span style="color:var(--success);">✅ Успехи (зелёный)</span> — то, что уже сделано правильно.</li>
+                    <li><span style="color:var(--stats);">📊 Статистика (синий)</span> — числовые показатели сайта.</li>
+                </ul>
+                Нажмите кнопку «Подробнее» на карточке, чтобы получить развёрнутое объяснение и совет.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                👁️ Почему предпросмотр сайта может быть пустым?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Некоторые сайты запрещают встраивание в iframe с помощью заголовка <code>X-Frame-Options</code>. 
+                В этом случае вы увидите только пустое окно или сообщение о запрете. Однако сам анализ всё равно выполнится, 
+                и рекомендации будут сформированы на основе данных, полученных через прокси.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                ⚡ Как приложение получает данные, если iframe заблокирован?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Мы используем публичный API-прокси <code>https://api.allorigins.win/raw?url=...</code>, 
+                который загружает HTML-код страницы. Это позволяет проанализировать заголовки, метатеги, 
+                количество изображений и ссылок даже без отображения самого сайта. 
+                Учтите, что у прокси есть ограничения по количеству запросов.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                💾 Где хранятся результаты проверок?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Вся история сохраняется в памяти вашего браузера (localStorage). 
+                Вы можете кликнуть на любую запись в левой панели, чтобы снова увидеть старый отчёт. 
+                История не исчезнет после закрытия вкладки, пока вы сами её не очистите.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                📦 Как скачать все отчёты одним архивом?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Нажмите кнопку «📦 Архивировать все» в блоке истории. Браузер соберёт все сохранённые отчёты, 
+                упакует их в ZIP-файл и предложит скачать. Внутри архива каждый отчёт будет отдельным файлом в формате JSON.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                🖨️ Можно ли распечатать отчёт или сохранить в PDF?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Да. Нажмите кнопку «🖨️» в шапке приложения, чтобы открыть стандартное окно печати. 
+                В настройках принтера выберите «Сохранить как PDF» — и получите готовый документ с полным отчётом.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                📋 Как скопировать отчёт в текстовом виде?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Кнопка «📋» в шапке копирует текущий отчёт в буфер обмена. После этого вы можете вставить его в любой текстовый редактор, мессенджер или письмо.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                🌙 Есть ли тёмная тема?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Да. Используйте переключатель «🌙 / ☀️» в правом верхнем углу, чтобы выбрать светлую или тёмную тему. 
+                Выбранная тема запомнится браузером.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                🔒 Можно ли проверять сайты, требующие авторизацию?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Нет. Приложение анализирует только общедоступные страницы. Вход по паролю или через соцсети не поддерживается.
+            </div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question">
+                📱 Как проверяется адаптивность сайта?
+                <span class="faq-arrow">▾</span>
+            </button>
+            <div class="faq-answer">
+                Мы проверяем наличие метатега <code>&lt;meta name="viewport"&gt;</code> в коде страницы. 
+                Если он есть — сайт считается адаптированным для мобильных устройств. 
+                Более глубокая проверка медиазапросов в CSS в этой версии не реализована.
+            </div>
+        </div>
+    </div>
+</section>
+        </main>
+    </div>
+
+    <!-- Контейнер для всплывающих уведомлений -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Библиотека JSZip для создания ZIP-архивов -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+<!--
+    ================================================================
+    ПРИМЕЧАНИЯ ПО РАЗРАБОТКЕ (WebInspector)
+    ================================================================
+    1.  Получение HTML-кода сайта реализовано через публичный прокси-сервис
+        allorigins.win, так как прямой fetch из браузера блокируется CORS.
+        Изначально нейросеть предлагала использовать iframe с contentDocument,
+        но это не даёт доступа к DOM из-за политик безопасности, поэтому
+        пришлось перейти на прокси-запросы.
+
+    2.  Логика парсинга HTML (извлечение title, meta, заголовков, количества
+        изображений и ссылок) и генерация рекомендаций — полностью авторская
+        разработка на основе набора правил (критические ошибки, предупреждения,
+        успехи и статистика). Каждое правило проверяет определённый аспект
+        страницы и выдаёт карточку с цветовой маркировкой.
+
+    3.  Дизайн карточек, анимации и общая стилистика взяты за основу из ответа
+        нейросети, но значительно доработаны:
+        - Добавлен анимированный градиентный фон (имитация GIF), который
+          плавно переливается.
+        - Изменена цветовая палитра категорий (ошибки, предупреждения, успехи,
+          статистика) для лучшей читаемости в обеих темах.
+        - Реализована анимация появления карточек с задержкой (stagger-эффект).
+        - Добавлена тёмная тема с сохранением выбора в localStorage.
+
+    4.  История проверок хранится в localStorage — реализована самостоятельно
+        с использованием JSON.stringify/parse, с ограничением на 50 записей.
+        При клике на элемент истории загружается соответствующий отчёт.
+
+    5.  Дополнительные функции (печать, копирование в буфер обмена, архивация
+        всех отчётов в ZIP через библиотеку JSZip) добавлены самостоятельно
+        для улучшения пользовательского опыта.
+
+    6.  Всплывающие уведомления (toast) и аккордеон FAQ также реализованы
+        вручную без использования сторонних библиотек.
+    ================================================================
+    -->
+
+</html>
